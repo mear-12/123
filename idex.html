@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drink Order Manager</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .drinks, .orders { margin-top: 20px; }
+    .drink-item { margin: 5px 0; }
+    input[type='number'] { width: 60px; }
+    .order-item { border-bottom: 1px solid #ccc; padding: 5px 0; }
+    .category { font-weight: bold; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Drink Order Manager</h1>
+
+  <label for="customerNumber">Customer Number:</label>
+  <input type="number" id="customerNumber" placeholder="e.g., 1" required>
+
+  <div class="drinks">
+    <h3>Select Drinks and Quantities:</h3>
+    <div class="category">Cold Drinks</div>
+    <div id="coldDrinks"></div>
+    <div class="category">Hot Drinks</div>
+    <div id="hotDrinks"></div>
+  </div>
+
+  <button onclick="saveOrder()">Save Order</button>
+
+  <div class="orders">
+    <h3>Saved Orders:</h3>
+    <div id="orderList"></div>
+  </div>
+
+  <script>
+    const drinks = {
+      "Spanish latte": 250,
+      "Iced caramel": 250,
+      "Iced mocha": 250,
+      "Iced chocolate": 250,
+      "Caramel Frappuccino": 250,
+      "Chocolate frappe": 300,
+      "Strawberry frappe": 300,
+      "Chocolate milkshake": 350,
+      "Vanilla milkshake": 350,
+      "White mocha": 300,
+      "Milky strawberry": 300,
+      "Mor'latte": 300,
+      "Mor'strawberry": 300,
+      "Espresso": 55,
+      "Flat white": 55,
+      "Afogato": 100,
+      "Moca": 100,
+      "Hot chocolate": 100
+    };
+
+    const coldDrinkList = [
+      "Spanish latte", "Iced caramel", "Iced mocha", "Iced chocolate",
+      "Caramel Frappuccino", "Chocolate frappe", "Strawberry frappe",
+      "Chocolate milkshake", "Vanilla milkshake", "White mocha",
+      "Milky strawberry", "Mor'latte", "Mor'strawberry"
+    ];
+
+    const hotDrinkList = [
+      "Espresso", "Flat white", "Afogato", "Moca", "Hot chocolate"
+    ];
+
+    function createDrinkInputs(drinkArray, containerId) {
+      const container = document.getElementById(containerId);
+      drinkArray.forEach(drink => {
+        const div = document.createElement("div");
+        div.className = "drink-item";
+        div.innerHTML = `
+          <label>
+            <input type="number" id="drink-${drink}" placeholder="0" min="0"> ${drink} (${drinks[drink]} birr)
+          </label>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    createDrinkInputs(coldDrinkList, "coldDrinks");
+    createDrinkInputs(hotDrinkList, "hotDrinks");
+
+    function saveOrder() {
+      const number = document.getElementById("customerNumber").value;
+      if (!number) {
+        alert("Please enter customer number.");
+        return;
+      }
+
+      let selectedItems = [];
+      let total = 0;
+
+      for (const drink in drinks) {
+        const quantity = parseInt(document.getElementById(`drink-${drink}`).value) || 0;
+        if (quantity > 0) {
+          selectedItems.push({ drink, quantity, price: drinks[drink] });
+          total += quantity * drinks[drink];
+        }
+      }
+
+      if (selectedItems.length === 0) {
+        alert("Please select at least one drink.");
+        return;
+      }
+
+      const order = {
+        number,
+        items: selectedItems,
+        total,
+        time: new Date().toLocaleString()
+      };
+
+      let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      orders.push(order);
+      localStorage.setItem("orders", JSON.stringify(orders));
+      displayOrders();
+    }
+
+    function displayOrders() {
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      const listDiv = document.getElementById("orderList");
+      listDiv.innerHTML = "";
+      orders.forEach(order => {
+        const div = document.createElement("div");
+        div.className = "order-item";
+        const itemList = order.items.map(item => `${item.quantity} x ${item.drink}`).join(", ");
+        div.innerHTML = `
+          <strong>${order.time}</strong><br>
+          Customer #${order.number}: ${itemList}<br>
+          <strong>Total: ${order.total} birr</strong>
+        `;
+        listDiv.appendChild(div);
+      });
+    }
+
+    displayOrders();
+  </script>
+</body>
+</html>
